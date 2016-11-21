@@ -3,7 +3,7 @@ project(order_8th)
 
 
 
-add_executable(order_8th main.cpp equation.cpp)
+add_executable(order_8th main.cpp)
 
 target_link_libraries(order_8th gsl gslcblas)
 
