@@ -19,14 +19,14 @@ double ff(double t, const double y) //функция из правой част�
   return 0;
 }
 
-int
-func (double t, const double y[], double f[],
+int //матрица системы
+func (double t, const double y[], double f[], 
       void *params)
 {
   (void)(t); /* avoid unused parameter warning */
   double A = *(double *)params;
   
-  f[0] = 0; //типа теплоизоляция
+  f[0] = 0; //теплоизоляция
   for(int i = 1; i < N - 1; i++)
   {
     f[i] = A / (h*h) * (y[i + 1] - 2 * y[i] + y[i - 1]) + ff(t, y[i]);
@@ -35,7 +35,7 @@ func (double t, const double y[], double f[],
   return GSL_SUCCESS;
 }
 
-int
+int //якобиан
 jac (double t, const double y[], double *dfdy, 
      double dfdt[], void *params)
 {
@@ -71,9 +71,11 @@ jac (double t, const double y[], double *dfdy,
   return GSL_SUCCESS;
 }
 
+//функция, рисующая пачку картинок
 void saveResult(const double x[], const double y[], int k) {
   pid_t pid;
   int status;
+  //записываем скрипт для gnuplot в файл
   FILE *scrpt = fopen("/home/user/Desktop/plot.txt", "w");
   fprintf(scrpt, "set terminal png\n");
   fprintf(scrpt, "set output '/home/user/Desktop/heat_plot/%d.png'\n", k);
@@ -81,7 +83,7 @@ void saveResult(const double x[], const double y[], int k) {
   fprintf(scrpt, "plot '/home/user/Desktop/result.txt' using 1:2 with lines");
   fclose(scrpt);
   FILE *res = fopen("/home/user/Desktop/result.txt", "w");
-  
+  //пишем в файл данные
   fprintf (res, "#\tx\t\t\tu\n");
   for(int i = 0; i < N; i++)
   {
@@ -89,7 +91,7 @@ void saveResult(const double x[], const double y[], int k) {
   }
   
   fclose(res);
-  
+  //запускаем gnuplot, он рисует график
   pid = fork();
   if(pid > 0) {
     wait(&status);
@@ -114,6 +116,7 @@ main (void)
   double t = 0.0;
   double y[N];
   double x[N];
+  //заполнение массива иксов
   for(int i = 0; i < N; i++)
   {
     x[i] = len / N * i;
@@ -132,10 +135,9 @@ main (void)
     }
   }
   y[N - 1] = 0;
-  /////////////////////////////////////////вывод в начальный момент времени
-  
+  //вывод в начальный момент времени
   saveResult(x, y, 0);
-  ////////////////////////////////////////
+  //решение системы
   for (i = 1; i <= 100; i++)
     {
       double ti = i * t1 / 100000.0; 				//большую детализацию по времени?
@@ -146,9 +148,10 @@ main (void)
 	  printf ("error, return value=%d\n", status);
 	  break;
 	}
+	//после каждого шага сохраняем
       saveResult(x, y, i);
     }
-
+  //освобождаем память
   gsl_odeiv2_driver_free (d);
   return 0;
 }
